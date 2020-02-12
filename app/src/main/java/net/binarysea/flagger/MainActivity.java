@@ -10,6 +10,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.util.Calendar;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
@@ -19,21 +21,40 @@ public class MainActivity extends AppCompatActivity {
     AlertDialog.Builder builder;
     EditText idInput;
     TextView idValue;
+    long timeOffset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Get ntp time and calculate offset from system time (ms)
+        SNTPClient.getDate(Calendar.getInstance().getTimeZone(), new SNTPClient.Listener() {
+            @Override
+            public void onTimeReceived(long rawDate) {
+                timeOffset = System.currentTimeMillis() - rawDate;
+                Log.d(TAG, "System: " + System.currentTimeMillis());
+                Log.d(TAG, "NTP: " + rawDate);
+                Log.d(TAG,"NTP offset: " +  timeOffset);
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                Log.d(SNTPClient.TAG, ex.getMessage());
+            }
+        });
+
         inflater = MainActivity.this.getLayoutInflater();
         builder = new AlertDialog.Builder(this);
 
+        // Button listeners
         Button buttonNew = findViewById(R.id.button_new);
         buttonNew.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mView = inflater.inflate(R.layout.dialog_new, null);
-                idInput = mView.findViewById(R.id.id_input);
                 idValue = findViewById(R.id.id_value);
+                idInput = mView.findViewById(R.id.id_input);
+                idInput.requestFocus();
 
                 builder.setView(mView)
                         .setPositiveButton("Create", new DialogInterface.OnClickListener() {
