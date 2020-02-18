@@ -45,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
     long timeOffset;
     Button buttonNew;
     Button buttonDelete;
+    Button buttonSave;
     Button button1;
     Button button2;
     Button button3;
@@ -131,6 +132,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        buttonSave = findViewById(R.id.button_save);
         button1 = findViewById(R.id.button1);
         button2 = findViewById(R.id.button2);
         button3 = findViewById(R.id.button3);
@@ -178,6 +180,7 @@ public class MainActivity extends AppCompatActivity {
     private void activateButtons(Boolean show) {
         buttonNew.setEnabled(show);
         buttonDelete.setEnabled(show);
+        buttonSave.setEnabled(show);
         button1.setEnabled(show);
         button2.setEnabled(show);
         button3.setEnabled(show);
