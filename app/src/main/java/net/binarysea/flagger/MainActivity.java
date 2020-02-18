@@ -30,7 +30,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     public static final String TAG = "MainActivity";
     PackageInfo info;
     String[] permissions;
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     AlertDialog.Builder builder;
     EditText idInput;
     TextView idValue;
-    long timeOffset;
+    Long timeOffset;
     Button buttonNew;
     Button buttonDelete;
     Button buttonSave;
@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // Get ntp time and calculate offset from system time (ms)
+        // Get NTP time and calculate offset from system time (ms)
         SNTPClient.getDate(Calendar.getInstance().getTimeZone(), new SNTPClient.Listener() {
             @Override
             public void onTimeReceived(long rawDate) {
@@ -97,8 +97,39 @@ public class MainActivity extends AppCompatActivity {
 
         // Button listeners
         buttonNew = findViewById(R.id.button_new);
-        buttonNew.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+        buttonNew.setOnClickListener(this);
+
+        buttonDelete = findViewById(R.id.button_delete);
+        buttonDelete.setOnClickListener(this);
+
+        buttonSave = findViewById(R.id.button_save);
+        buttonSave.setOnClickListener(this);
+
+        button1 = findViewById(R.id.button1);
+        button1.setOnClickListener(this);
+
+        button2 = findViewById(R.id.button2);
+        button2.setOnClickListener(this);
+
+        button3 = findViewById(R.id.button3);
+        button3.setOnClickListener(this);
+
+        button4 = findViewById(R.id.button4);
+        button4.setOnClickListener(this);
+
+        button5 = findViewById(R.id.button5);
+        button5.setOnClickListener(this);
+
+        button6 = findViewById(R.id.button6);
+        button6.setOnClickListener(this);
+    }
+
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.button_new: {
+                Log.d(TAG, "onClick: new");
                 mView = inflater.inflate(R.layout.dialog_new, null);
                 idValue = findViewById(R.id.id_value);
                 idInput = mView.findViewById(R.id.id_input);
@@ -121,24 +152,42 @@ public class MainActivity extends AppCompatActivity {
                 // Setting the title manually
                 alert.setTitle("Enter new ID:");
                 alert.show();
+                break;
             }
-        });
-
-
-        buttonDelete = findViewById(R.id.button_delete);
-        buttonDelete.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
+            case R.id.button_save: {
+                Log.d(TAG, "onClick: save");
+                break;
+            }
+            case R.id.button_delete: {
+                Log.d(TAG, "onClick: delete");
                 idValue.setText("");
+                break;
             }
-        });
-
-        buttonSave = findViewById(R.id.button_save);
-        button1 = findViewById(R.id.button1);
-        button2 = findViewById(R.id.button2);
-        button3 = findViewById(R.id.button3);
-        button4 = findViewById(R.id.button4);
-        button5 = findViewById(R.id.button5);
-        button6 = findViewById(R.id.button6);
+            case R.id.button1: {
+                Log.d(TAG, "onClick: button1");
+                break;
+            }
+            case R.id.button2: {
+                Log.d(TAG, "onClick: button2");
+                break;
+            }
+            case R.id.button3: {
+                Log.d(TAG, "onClick: button3");
+                break;
+            }
+            case R.id.button4: {
+                Log.d(TAG, "onClick: button4");
+                break;
+            }
+            case R.id.button5: {
+                Log.d(TAG, "onClick: button5");
+                break;
+            }
+            case R.id.button6: {
+                Log.d(TAG, "onClick: button6");
+                break;
+            }
+        }
     }
 
     private boolean hasPermission(String permission) {
@@ -223,4 +272,5 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
 }
