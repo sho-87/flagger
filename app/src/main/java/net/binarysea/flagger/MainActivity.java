@@ -1,6 +1,7 @@
 package net.binarysea.flagger;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -136,7 +138,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_new: {
-                Log.d(TAG, "onClick: new");
                 mView = inflater.inflate(R.layout.dialog_new, null);
                 idValue = findViewById(R.id.id_value);
                 idInput = mView.findViewById(R.id.id_input);
@@ -146,11 +147,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .setPositiveButton("Create", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
                                 idValue.setText(idInput.getText().toString());
+                                showKeyboard(false, MainActivity.this);
                                 createNewFile(Integer.toString(id));
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
+                                showKeyboard(false, MainActivity.this);
                                 dialog.cancel();
                             }
                         });
@@ -159,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 // Setting the title manually
                 alert.setTitle("Enter new ID:");
                 alert.show();
+                showKeyboard(true, this);
                 break;
             }
             case R.id.button_save: {
@@ -253,6 +257,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         button4.setEnabled(show);
         button5.setEnabled(show);
         button6.setEnabled(show);
+    }
+
+    private void showKeyboard(Boolean show, MainActivity mainActivity) {
+        InputMethodManager imm = (InputMethodManager) mainActivity.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        if (show) {
+            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+        } else {
+            imm.hideSoftInputFromWindow(mView.getWindowToken(), 0);
+        }
     }
 
     private void createNewFile(String id) {
