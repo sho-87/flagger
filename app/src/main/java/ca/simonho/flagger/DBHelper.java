@@ -47,8 +47,6 @@ public class DBHelper extends SQLiteOpenHelper {
      */
     private DBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
-        // String databasePath = context.getDatabasePath(DATABASE_NAME).getPath();
         db = this.getWritableDatabase();
     }
 
@@ -69,6 +67,8 @@ public class DBHelper extends SQLiteOpenHelper {
             sInstance = new DBHelper(context.getApplicationContext());
             Log.d(TAG, "New DBHelper created");
         }
+
+        //String databasePath = context.getDatabasePath(DATABASE_NAME).getPath();
 
         return sInstance;
     }
@@ -182,7 +182,6 @@ public class DBHelper extends SQLiteOpenHelper {
         csvWrite.writeNext(curCSV.getColumnNames());
 
         int writeCounter = 0;
-//        int numRows = curCSV.getCount();
 
         while (curCSV.moveToNext()) {
             writeCounter++;

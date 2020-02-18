@@ -325,9 +325,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     dbHelper.saveTempData();
 
                     //Backup the SQL DB file
-                    File data = Environment.getDataDirectory();
-                    String currentDBPath = "//data//ca.simonho.flagger//databases//" + DBHelper.DATABASE_NAME;
-                    File currentDB = new File(data, currentDBPath);
+                    String currentDBPath = getApplicationContext().getDatabasePath(DBHelper.DATABASE_NAME).getPath();
+                    File currentDB = new File(currentDBPath);
                     File destDB = new File(exportDir, DBHelper.DATABASE_NAME);
 
                     if (exportDir.canWrite()) {
