@@ -7,7 +7,6 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.opencsv.CSVWriter;
@@ -17,9 +16,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class DBHelper extends SQLiteOpenHelper {
-    private static final String TAG = "DBHelper";
     //Constants for db name and version
     static final String DATABASE_NAME = "flagger.db";
+    private static final String TAG = "DBHelper";
     private static final int DATABASE_VERSION = 1;
     //Constants for identifying events table and fields
     private static final String EVENTS_TABLE_NAME = "events";
@@ -39,7 +38,6 @@ public class DBHelper extends SQLiteOpenHelper {
     //SQL to create TEMP events table
     private static final String EVENTS_TABLE_CREATE_TEMP =
             "CREATE TEMP TABLE " + EVENTS_TABLE_NAME_TEMP + EVENTS_TABLE_STRUCTURE;
-    private static Handler messageHandler;
     private static DBHelper sInstance;
     private SQLiteDatabase db;
 
@@ -85,7 +83,6 @@ public class DBHelper extends SQLiteOpenHelper {
             Log.d(TAG, "New DBHelper created");
         }
 
-        messageHandler = handler;
         return sInstance;
     }
 
@@ -197,12 +194,6 @@ public class DBHelper extends SQLiteOpenHelper {
             if ((writeCounter % 100) == 0) {
                 csvWrite.flush();
             }
-
-//            Double progressPercent = Math.ceil(((float) writeCounter / (float) numRows) * 100);
-//            Message msg = Message.obtain();
-//            msg.obj = progressPercent;
-//            msg.setTarget(messageHandler);
-//            msg.sendToTarget();
         }
 
         csvWrite.close();

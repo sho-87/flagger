@@ -189,11 +189,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.button_save: {
-                new ExportDatabaseCSVTask().execute();
+                if (dbHelper.hasTempData(subID)) {
+                    new ExportDatabaseCSVTask().execute();
+                }
                 break;
             }
             case R.id.button_delete: {
-                dbHelper.deleteTempData();
+                if (dbHelper.hasTempData(subID)) {
+                    dbHelper.deleteTempData();
+                }
                 idValue.setText("");
                 activateButtons(false);
                 break;
