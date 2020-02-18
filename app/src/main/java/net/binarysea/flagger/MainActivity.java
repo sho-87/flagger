@@ -31,7 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    public static final String TAG = "MainActivity";
+    private static final String TAG = "MainActivity";
     PackageInfo info;
     String[] permissions;
     Boolean hasAllPerms = true;
@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     Button buttonNew;
     Button buttonDelete;
     Button buttonSave;
+    Button buttonStart;
+    Button buttonStop;
     Button button1;
     Button button2;
     Button button3;
@@ -99,31 +101,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         buttonNew = findViewById(R.id.button_new);
         buttonNew.setOnClickListener(this);
 
-        buttonDelete = findViewById(R.id.button_delete);
-        buttonDelete.setOnClickListener(this);
-
         buttonSave = findViewById(R.id.button_save);
         buttonSave.setOnClickListener(this);
 
-        button1 = findViewById(R.id.button1);
+        buttonDelete = findViewById(R.id.button_delete);
+        buttonDelete.setOnClickListener(this);
+
+        buttonStart = findViewById(R.id.button_start);
+        buttonStart.setOnClickListener(this);
+
+        buttonStop = findViewById(R.id.button_stop);
+        buttonStop.setOnClickListener(this);
+
+        button1 = findViewById(R.id.button_1);
         button1.setOnClickListener(this);
 
-        button2 = findViewById(R.id.button2);
+        button2 = findViewById(R.id.button_2);
         button2.setOnClickListener(this);
 
-        button3 = findViewById(R.id.button3);
+        button3 = findViewById(R.id.button_3);
         button3.setOnClickListener(this);
 
-        button4 = findViewById(R.id.button4);
+        button4 = findViewById(R.id.button_4);
         button4.setOnClickListener(this);
 
-        button5 = findViewById(R.id.button5);
+        button5 = findViewById(R.id.button_5);
         button5.setOnClickListener(this);
 
-        button6 = findViewById(R.id.button6);
+        button6 = findViewById(R.id.button_6);
         button6.setOnClickListener(this);
     }
-
 
     @Override
     public void onClick(View view) {
@@ -163,27 +170,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 idValue.setText("");
                 break;
             }
-            case R.id.button1: {
+            case R.id.button_start: {
+                Log.d(TAG, "onClick: start");
+                break;
+            }
+            case R.id.button_stop: {
+                Log.d(TAG, "onClick: stop");
+                break;
+            }
+            case R.id.button_1: {
                 Log.d(TAG, "onClick: button1");
                 break;
             }
-            case R.id.button2: {
+            case R.id.button_2: {
                 Log.d(TAG, "onClick: button2");
                 break;
             }
-            case R.id.button3: {
+            case R.id.button_3: {
                 Log.d(TAG, "onClick: button3");
                 break;
             }
-            case R.id.button4: {
+            case R.id.button_4: {
                 Log.d(TAG, "onClick: button4");
                 break;
             }
-            case R.id.button5: {
+            case R.id.button_5: {
                 Log.d(TAG, "onClick: button5");
                 break;
             }
-            case R.id.button6: {
+            case R.id.button_6: {
                 Log.d(TAG, "onClick: button6");
                 break;
             }
@@ -228,8 +243,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void activateButtons(Boolean show) {
         buttonNew.setEnabled(show);
-        buttonDelete.setEnabled(show);
         buttonSave.setEnabled(show);
+        buttonDelete.setEnabled(show);
+        buttonStart.setEnabled(show);
+        buttonStop.setEnabled(show);
         button1.setEnabled(show);
         button2.setEnabled(show);
         button3.setEnabled(show);
