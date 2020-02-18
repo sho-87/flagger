@@ -5,8 +5,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.SQLException;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,14 +21,13 @@ import android.widget.TextView;
 import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
+import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,14 +39,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     PackageInfo info;
     String[] permissions;
     Boolean hasAllPerms = true;
-    FileOutputStream f;
-    PrintWriter pw;
+    DBHelper dbHelper;
     LayoutInflater inflater;
     View mView;
     AlertDialog.Builder builder;
+    Long timeOffset;
     EditText idInput;
     TextView idValue;
-    Long timeOffset;
+    Short subID;
     Button buttonNew;
     Button buttonDelete;
     Button buttonSave;
@@ -96,6 +98,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
+        // Create dbHelper
+        dbHelper = DBHelper.getInstance(this);
+
         inflater = MainActivity.this.getLayoutInflater();
         builder = new AlertDialog.Builder(this);
 
@@ -135,6 +140,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dbHelper.closeDB();
+    }
+
+    @Override
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.button_new: {
@@ -146,9 +157,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 builder.setView(mView)
                         .setPositiveButton("Create", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
-                                idValue.setText(idInput.getText().toString());
-                                showKeyboard(false, MainActivity.this);
-                                createNewFile(Integer.toString(id));
+                                String curID = idInput.getText().toString();
+
+                                if (!dbHelper.hasID(Short.parseShort(curID))) {
+                                    idValue.setText(curID);
+                                    subID = Short.parseShort(curID);
+                                    activateButtons(true);
+                                    showKeyboard(false, MainActivity.this);
+                                } else {
+                                    final Snackbar sb = Snackbar.make(findViewById(android.R.id.content), "ID already exists", Snackbar.LENGTH_SHORT);
+
+                                    sb.setAction("Dismiss", new View.OnClickListener() {
+                                        @Override
+                                        public void onClick(View view) {
+                                            sb.dismiss();
+                                        }
+                                    }).show();
+                                }
                             }
                         })
                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -166,44 +191,45 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             }
             case R.id.button_save: {
-                Log.d(TAG, "onClick: save");
+                new ExportDatabaseCSVTask().execute();
                 break;
             }
             case R.id.button_delete: {
-                Log.d(TAG, "onClick: delete");
+                dbHelper.deleteTempData();
                 idValue.setText("");
+                activateButtons(false);
                 break;
             }
             case R.id.button_start: {
-                Log.d(TAG, "onClick: start");
+                dbHelper.insertTempData(subID, "start", calcTime());
                 break;
             }
             case R.id.button_stop: {
-                Log.d(TAG, "onClick: stop");
+                dbHelper.insertTempData(subID, "stop", calcTime());
                 break;
             }
             case R.id.button_1: {
-                Log.d(TAG, "onClick: button1");
+                dbHelper.insertTempData(subID, "1", calcTime());
                 break;
             }
             case R.id.button_2: {
-                Log.d(TAG, "onClick: button2");
+                dbHelper.insertTempData(subID, "2", calcTime());
                 break;
             }
             case R.id.button_3: {
-                Log.d(TAG, "onClick: button3");
+                dbHelper.insertTempData(subID, "3", calcTime());
                 break;
             }
             case R.id.button_4: {
-                Log.d(TAG, "onClick: button4");
+                dbHelper.insertTempData(subID, "4", calcTime());
                 break;
             }
             case R.id.button_5: {
-                Log.d(TAG, "onClick: button5");
+                dbHelper.insertTempData(subID, "5", calcTime());
                 break;
             }
             case R.id.button_6: {
-                Log.d(TAG, "onClick: button6");
+                dbHelper.insertTempData(subID, "6", calcTime());
                 break;
             }
         }
@@ -228,13 +254,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     })
                     .show();
 
+            buttonNew.setEnabled(false);
             activateButtons(false);
         } else {
             // If all permissions have been granted
-            activateButtons(true);
+            buttonNew.setEnabled(true);
         }
     }
-
 
     private boolean arePermissionsGranted(int[] grantResults) {
         for (int result : grantResults) {
@@ -243,20 +269,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
         return true;
-    }
-
-    private void activateButtons(Boolean show) {
-        buttonNew.setEnabled(show);
-        buttonSave.setEnabled(show);
-        buttonDelete.setEnabled(show);
-        buttonStart.setEnabled(show);
-        buttonStop.setEnabled(show);
-        button1.setEnabled(show);
-        button2.setEnabled(show);
-        button3.setEnabled(show);
-        button4.setEnabled(show);
-        button5.setEnabled(show);
-        button6.setEnabled(show);
     }
 
     private void showKeyboard(Boolean show, MainActivity mainActivity) {
@@ -269,39 +281,144 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void createNewFile(String id) {
-        String pathToExternalStorage = Environment.getExternalStorageDirectory().toString();
-        File exportDir = new File(pathToExternalStorage, "/Flagger");
-
-        if (!exportDir.exists()) {
-            boolean created = exportDir.mkdirs();
-        }
-
-        final DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        final long unixTime = System.currentTimeMillis() - timeOffset;
-        final String formattedDtm = Instant.ofEpochSecond(unixTime)
-                .atZone(ZoneId.of("GMT-8"))
-                .format(formatter);
-
-        File file = new File(exportDir, String.format("%s - %s.csv", id, formattedDtm));
-
-        try {
-            f = new FileOutputStream(file);
-            pw = new PrintWriter(f);
-            pw.println("id, time, code");
-            pw.println("id, time, code");
-            pw.flush();
-            pw.close();
-            f.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            Log.i(TAG, "******* File not found. Did you" +
-                    " add a WRITE_EXTERNAL_STORAGE permission to the manifest?");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void activateButtons(Boolean show) {
+        buttonSave.setEnabled(show);
+        buttonDelete.setEnabled(show);
+        buttonStart.setEnabled(show);
+        buttonStop.setEnabled(show);
+        button1.setEnabled(show);
+        button2.setEnabled(show);
+        button3.setEnabled(show);
+        button4.setEnabled(show);
+        button5.setEnabled(show);
+        button6.setEnabled(show);
     }
 
+    private long calcTime() {
+        return System.currentTimeMillis() - timeOffset;
+    }
+
+    //Async class for CSV export task
+    public class ExportDatabaseCSVTask extends AsyncTask<String, Integer, Boolean> {
+        protected Boolean doInBackground(final String... args) {
+            //Create directories for the output csv files
+            String pathToExternalStorage = Environment.getExternalStorageDirectory().toString();
+            File exportDir = new File(pathToExternalStorage, "/Flagger");
+            File dataDir = new File(exportDir, "/data");
+
+            publishProgress(5);
+            SystemClock.sleep(100);
+
+            if (!exportDir.exists()) {
+                boolean created = exportDir.mkdirs();
+                Log.d(TAG, "Export Dir created: " + created);
+            }
+
+            if (!dataDir.exists()) {
+                boolean created = dataDir.mkdirs();
+                Log.d(TAG, "Data Dir created: " + created);
+            }
+
+            publishProgress(10);
+            SystemClock.sleep(100);
+
+            //If all directories have been created successfully
+            if (exportDir.exists() && dataDir.exists()) {
+                try {
+                    //Copy temp data to persistent db tables
+                    dbHelper.saveTempData();
+
+                    publishProgress(20);
+                    SystemClock.sleep(200);
+
+                    //Backup the SQL DB file
+                    File data = Environment.getDataDirectory();
+                    String currentDBPath = "//data//ca.simonho.flagger//databases//" + DBHelper.DATABASE_NAME;
+                    File currentDB = new File(data, currentDBPath);
+                    File destDB = new File(exportDir, DBHelper.DATABASE_NAME);
+
+                    publishProgress(25);
+                    SystemClock.sleep(100);
+
+                    if (exportDir.canWrite()) {
+                        if (currentDB.exists()) {
+                            FileChannel src = new FileInputStream(currentDB).getChannel();
+                            FileChannel dst = new FileOutputStream(destDB).getChannel();
+                            dst.transferFrom(src, 0, src.size());
+                            src.close();
+                            dst.close();
+                        }
+                    }
+
+                    publishProgress(35);
+                    SystemClock.sleep(300);
+
+                    //Export individual subject data
+                    File dataFile = new File(dataDir, subID.toString() + ".csv");
+
+                    try {
+                        dbHelper.exportSubjectData(dataFile, subID.toString());
+                    } catch (SQLException | IOException e) {
+                        Log.d(TAG, "exportSubjectData error", e);
+                    }
+
+                    publishProgress(90);
+                    SystemClock.sleep(300);
+
+                    //Scan all files for MTP
+                    List<String> fileList = getListFiles(exportDir);
+                    String[] allFiles = new String[fileList.size()];
+                    allFiles = fileList.toArray(allFiles);
+
+                    MediaScanner mediaScanner = new MediaScanner();
+
+                    try {
+                        mediaScanner.scanFile(getApplicationContext(), allFiles, null);
+                    } catch (Exception e) {
+                        Log.e(TAG, "Media scanner exception", e);
+                    }
+
+                    publishProgress(100);
+                    SystemClock.sleep(400);
+
+                    return true;
+                } catch (SQLException | IOException e) {
+                    Log.e(TAG, "Save data exception", e);
+                    return false;
+                }
+            } else {
+                //Directories don't exist
+                if (!exportDir.exists()) {
+                    Log.e(TAG, "Flagger directory not found");
+                } else if (!dataDir.exists()) {
+                    Log.e(TAG, "Data directory not found");
+                }
+                return false;
+            }
+        }
+
+        protected void onPostExecute(final Boolean success) {
+            if (success) {
+                idValue.setText("");
+                activateButtons(false);
+            }
+        }
+
+        //Recursive file lister for MTP
+        private List<String> getListFiles(File parentDir) {
+            ArrayList<String> inFiles = new ArrayList<>();
+            File[] files = parentDir.listFiles();
+
+            //Loop through everything in base directory, including folders
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    //Recursively add files from subdirectories
+                    inFiles.addAll(getListFiles(file));
+                } else {
+                    inFiles.add(file.getAbsolutePath());
+                }
+            }
+            return inFiles;
+        }
+    }
 }

@@ -19,7 +19,7 @@ import java.io.IOException;
 public class DBHelper extends SQLiteOpenHelper {
     private static final String TAG = "DBHelper";
     //Constants for db name and version
-    private static final String DATABASE_NAME = "flagger.db";
+    static final String DATABASE_NAME = "flagger.db";
     private static final int DATABASE_VERSION = 1;
     //Constants for identifying events table and fields
     private static final String EVENTS_TABLE_NAME = "events";
@@ -62,7 +62,7 @@ public class DBHelper extends SQLiteOpenHelper {
      * Instead, always use DatabaseHelper.getInstance(context), as it guarantees that only
      * one database helper will exist across the entire application’s lifecycle.
      */
-    public static synchronized DBHelper getInstance(Context context) {
+    static synchronized DBHelper getInstance(Context context) {
 
         // Use the application context, which will ensure that you
         // don't accidentally leak an Activity's context.
@@ -114,7 +114,7 @@ public class DBHelper extends SQLiteOpenHelper {
         createTempTables(db);
     }
 
-    public void closeDB() {
+    void closeDB() {
         if (db != null) {
             Log.d(TAG, "closeDB: closing db");
             db.close();
@@ -135,7 +135,7 @@ public class DBHelper extends SQLiteOpenHelper {
         db.execSQL(EVENTS_TABLE_CREATE_TEMP);
     }
 
-    public boolean hasID(Short subNum) throws SQLException {
+    boolean hasID(Short subNum) throws SQLException {
         //Check if subject exists in persistent data table
         String query = "SELECT * FROM " + EVENTS_TABLE_NAME + " WHERE " + EVENTS_ID + "=" + subNum;
 
@@ -146,7 +146,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return exists;
     }
 
-    public boolean hasTempData(Short subNum) throws SQLException {
+    boolean hasTempData(Short subNum) throws SQLException {
         //Check if data, for this subject, exists in the temp data table
         String query = "SELECT * FROM " + EVENTS_TABLE_NAME_TEMP + " WHERE " + EVENTS_ID + "=" + subNum;
 
@@ -157,37 +157,12 @@ public class DBHelper extends SQLiteOpenHelper {
         return exists;
     }
 
-    public String getTempData(String type) throws SQLException {
-        String result = "";
-
-        String query = "SELECT * FROM " + EVENTS_TABLE_NAME_TEMP;
-        Cursor c = db.rawQuery(query, null);
-
-        if (c.getCount() > 0) {
-            c.moveToFirst();
-            switch (type) {
-                case "id":
-                    result = c.getString(c.getColumnIndex(EVENTS_ID));
-                    break;
-                case "type":
-                    result = c.getString(c.getColumnIndex(EVENTS_TYPE));
-                    break;
-                case "time":
-                    result = c.getString(c.getColumnIndex(EVENTS_TIME));
-                    break;
-            }
-        }
-        c.close();
-
-        return result;
-    }
-
-    public void deleteTempData() throws SQLException {
+    void deleteTempData() throws SQLException {
         //Delete temp data. Table is not removed.
         db.delete(EVENTS_TABLE_NAME_TEMP, null, null);
     }
 
-    public void insertTempData(short id, String type, long time) throws SQLException {
+    void insertTempData(short id, String type, long time) throws SQLException {
         ContentValues data = new ContentValues();
 
         data.put(EVENTS_ID, id);
@@ -197,12 +172,12 @@ public class DBHelper extends SQLiteOpenHelper {
         db.insertOrThrow(EVENTS_TABLE_NAME_TEMP, null, data);
     }
 
-    public void saveTempData() throws SQLException {
+    void saveTempData() throws SQLException {
         String saveDataSQL = "INSERT INTO " + EVENTS_TABLE_NAME + " SELECT * FROM " + EVENTS_TABLE_NAME_TEMP;
         db.execSQL(saveDataSQL);
     }
 
-    public void exportSubjectData(File outputFile, String id) throws IOException, SQLException {
+    void exportSubjectData(File outputFile, String id) throws IOException, SQLException {
         CSVWriter csvWrite = new CSVWriter(new FileWriter(outputFile));
 
         Cursor curCSV = db.rawQuery("SELECT * FROM " + EVENTS_TABLE_NAME + " WHERE id = " + id, null);
