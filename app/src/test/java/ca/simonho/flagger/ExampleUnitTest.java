@@ -1,4 +1,4 @@
-package net.binarysea.flagger;
+package ca.simonho.flagger;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package net.binarysea.flagger;
+package ca.simonho.flagger;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -185,7 +185,7 @@ public class DBHelper extends SQLiteOpenHelper {
         csvWrite.writeNext(curCSV.getColumnNames());
 
         int writeCounter = 0;
-        int numRows = curCSV.getCount();
+//        int numRows = curCSV.getCount();
 
         while (curCSV.moveToNext()) {
             writeCounter++;
@@ -198,11 +198,11 @@ public class DBHelper extends SQLiteOpenHelper {
                 csvWrite.flush();
             }
 
-            Double progressPercent = Math.ceil(((float) writeCounter / (float) numRows) * 100);
-            Message msg = Message.obtain();
-            msg.obj = progressPercent;
-            msg.setTarget(messageHandler);
-            msg.sendToTarget();
+//            Double progressPercent = Math.ceil(((float) writeCounter / (float) numRows) * 100);
+//            Message msg = Message.obtain();
+//            msg.obj = progressPercent;
+//            msg.setTarget(messageHandler);
+//            msg.sendToTarget();
         }
 
         csvWrite.close();

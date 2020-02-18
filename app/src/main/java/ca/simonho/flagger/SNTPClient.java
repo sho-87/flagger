@@ -1,4 +1,4 @@
-package net.binarysea.flagger;
+package ca.simonho.flagger;
 
 /*
  * Original work Copyright (C) 2008 The Android Open Source Project
@@ -23,7 +23,6 @@ import android.util.Log;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
 /**

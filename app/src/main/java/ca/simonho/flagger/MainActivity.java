@@ -1,4 +1,4 @@
-package net.binarysea.flagger;
+package ca.simonho.flagger;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -9,7 +9,6 @@ import android.database.SQLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -157,13 +156,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 builder.setView(mView)
                         .setPositiveButton("Create", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int id) {
+                                showKeyboard(false, MainActivity.this);
                                 String curID = idInput.getText().toString();
-
                                 if (!dbHelper.hasID(Short.parseShort(curID))) {
                                     idValue.setText(curID);
                                     subID = Short.parseShort(curID);
                                     activateButtons(true);
-                                    showKeyboard(false, MainActivity.this);
                                 } else {
                                     final Snackbar sb = Snackbar.make(findViewById(android.R.id.content), "ID already exists", Snackbar.LENGTH_SHORT);
 
@@ -306,9 +304,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             File exportDir = new File(pathToExternalStorage, "/Flagger");
             File dataDir = new File(exportDir, "/data");
 
-            publishProgress(5);
-            SystemClock.sleep(100);
-
             if (!exportDir.exists()) {
                 boolean created = exportDir.mkdirs();
                 Log.d(TAG, "Export Dir created: " + created);
@@ -319,26 +314,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Log.d(TAG, "Data Dir created: " + created);
             }
 
-            publishProgress(10);
-            SystemClock.sleep(100);
-
             //If all directories have been created successfully
             if (exportDir.exists() && dataDir.exists()) {
                 try {
                     //Copy temp data to persistent db tables
                     dbHelper.saveTempData();
 
-                    publishProgress(20);
-                    SystemClock.sleep(200);
-
                     //Backup the SQL DB file
                     File data = Environment.getDataDirectory();
                     String currentDBPath = "//data//ca.simonho.flagger//databases//" + DBHelper.DATABASE_NAME;
                     File currentDB = new File(data, currentDBPath);
                     File destDB = new File(exportDir, DBHelper.DATABASE_NAME);
-
-                    publishProgress(25);
-                    SystemClock.sleep(100);
 
                     if (exportDir.canWrite()) {
                         if (currentDB.exists()) {
@@ -350,9 +336,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         }
                     }
 
-                    publishProgress(35);
-                    SystemClock.sleep(300);
-
                     //Export individual subject data
                     File dataFile = new File(dataDir, subID.toString() + ".csv");
 
@@ -361,9 +344,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } catch (SQLException | IOException e) {
                         Log.d(TAG, "exportSubjectData error", e);
                     }
-
-                    publishProgress(90);
-                    SystemClock.sleep(300);
 
                     //Scan all files for MTP
                     List<String> fileList = getListFiles(exportDir);
@@ -377,9 +357,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     } catch (Exception e) {
                         Log.e(TAG, "Media scanner exception", e);
                     }
-
-                    publishProgress(100);
-                    SystemClock.sleep(400);
 
                     return true;
                 } catch (SQLException | IOException e) {
@@ -399,6 +376,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         protected void onPostExecute(final Boolean success) {
             if (success) {
+                final Snackbar sb = Snackbar.make(findViewById(android.R.id.content), "Data saved", Snackbar.LENGTH_SHORT);
+
+                sb.setAction("Dismiss", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        sb.dismiss();
+                    }
+                }).show();
+
                 idValue.setText("");
                 activateButtons(false);
             }

@@ -1,4 +1,4 @@
-package net.binarysea.flagger;
+package ca.simonho.flagger;
 
 import android.content.Context;
 import android.media.MediaScannerConnection;
