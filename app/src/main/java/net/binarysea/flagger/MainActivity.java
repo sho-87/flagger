@@ -2,6 +2,8 @@ package net.binarysea.flagger;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -10,6 +12,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,10 +25,16 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 public class MainActivity extends AppCompatActivity {
     public static final String TAG = "MainActivity";
+    PackageInfo info;
+    String[] permissions;
+    Boolean hasAllPerms = true;
     FileOutputStream f;
     PrintWriter pw;
     LayoutInflater inflater;
@@ -33,20 +43,46 @@ public class MainActivity extends AppCompatActivity {
     EditText idInput;
     TextView idValue;
     long timeOffset;
+    Button buttonNew;
+    Button buttonDelete;
+    Button button1;
+    Button button2;
+    Button button3;
+    Button button4;
+    Button button5;
+    Button button6;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //Get ntp time and calculate offset from system time (ms)
+        // Check permissions
+        try {
+            info = getPackageManager().getPackageInfo(this.getPackageName(), PackageManager.GET_PERMISSIONS);
+            permissions = info.requestedPermissions;
+            for (String p : permissions) {
+                if (!hasPermission(p)) {
+                    hasAllPerms = false;
+                    break;
+                }
+            }
+
+            if (!hasAllPerms) {
+                ActivityCompat.requestPermissions(this, permissions, 10);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // Get ntp time and calculate offset from system time (ms)
         SNTPClient.getDate(Calendar.getInstance().getTimeZone(), new SNTPClient.Listener() {
             @Override
             public void onTimeReceived(long rawDate) {
                 timeOffset = System.currentTimeMillis() - rawDate;
                 Log.d(TAG, "System: " + System.currentTimeMillis());
                 Log.d(TAG, "NTP: " + rawDate);
-                Log.d(TAG,"NTP offset: " +  timeOffset);
+                Log.d(TAG, "NTP offset: " + timeOffset);
             }
 
             @Override
@@ -59,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         builder = new AlertDialog.Builder(this);
 
         // Button listeners
-        Button buttonNew = findViewById(R.id.button_new);
+        buttonNew = findViewById(R.id.button_new);
         buttonNew.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mView = inflater.inflate(R.layout.dialog_new, null);
@@ -79,31 +115,78 @@ public class MainActivity extends AppCompatActivity {
                                 dialog.cancel();
                             }
                         });
-                //Creating dialog box
+                // Creating dialog box
                 AlertDialog alert = builder.create();
-                //Setting the title manually
+                // Setting the title manually
                 alert.setTitle("Enter new ID:");
                 alert.show();
             }
         });
 
 
-        Button buttonDelete = findViewById(R.id.button_delete);
+        buttonDelete = findViewById(R.id.button_delete);
         buttonDelete.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 idValue.setText("");
             }
         });
 
-        Button button1 = findViewById(R.id.button1);
-        Button button2 = findViewById(R.id.button2);
-        Button button3 = findViewById(R.id.button3);
-        Button button4 = findViewById(R.id.button4);
-        Button button5 = findViewById(R.id.button5);
-        Button button6 = findViewById(R.id.button6);
+        button1 = findViewById(R.id.button1);
+        button2 = findViewById(R.id.button2);
+        button3 = findViewById(R.id.button3);
+        button4 = findViewById(R.id.button4);
+        button5 = findViewById(R.id.button5);
+        button6 = findViewById(R.id.button6);
     }
 
-    private void createNewFile(String id){
+    private boolean hasPermission(String permission) {
+        return (ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull final String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        // If at least one permission has been denied, show snackbar
+        if (grantResults.length == 0 || !arePermissionsGranted(grantResults)) {
+            Snackbar.make(findViewById(android.R.id.content), "Storage and internet permissions required for this app to work", Snackbar.LENGTH_INDEFINITE)
+                    .setAction("Request", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            ActivityCompat.requestPermissions(MainActivity.this, permissions, 10);
+                        }
+                    })
+                    .show();
+
+            activateButtons(false);
+        } else {
+            // If all permissions have been granted
+            activateButtons(true);
+        }
+    }
+
+
+    private boolean arePermissionsGranted(int[] grantResults) {
+        for (int result : grantResults) {
+            if (result != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void activateButtons(Boolean show) {
+        buttonNew.setEnabled(show);
+        buttonDelete.setEnabled(show);
+        button1.setEnabled(show);
+        button2.setEnabled(show);
+        button3.setEnabled(show);
+        button4.setEnabled(show);
+        button5.setEnabled(show);
+        button6.setEnabled(show);
+    }
+
+    private void createNewFile(String id) {
         String pathToExternalStorage = Environment.getExternalStorageDirectory().toString();
         File exportDir = new File(pathToExternalStorage, "/Flagger");
 
