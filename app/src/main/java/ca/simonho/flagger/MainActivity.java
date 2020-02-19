@@ -103,6 +103,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         inflater = MainActivity.this.getLayoutInflater();
         builder = new AlertDialog.Builder(this);
 
+        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        getSupportActionBar().setLogo(R.drawable.baseline_emoji_flags_black_36);
+        getSupportActionBar().setDisplayUseLogoEnabled(true);
+
         // Button listeners
         buttonNew = findViewById(R.id.button_new);
         buttonNew.setOnClickListener(this);
