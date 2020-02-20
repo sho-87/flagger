@@ -9,6 +9,8 @@ import android.database.SQLException;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +18,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 
@@ -27,6 +30,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -42,7 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     LayoutInflater inflater;
     View mView;
     AlertDialog.Builder builder;
-    Long timeOffset;
+    long timeOffset = 0;
     EditText idInput;
     TextView idValue;
     Short subID;
@@ -80,22 +84,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        // Get NTP time and calculate offset from system time (ms)
-        SNTPClient.getDate(Calendar.getInstance().getTimeZone(), new SNTPClient.Listener() {
-            @Override
-            public void onTimeReceived(long rawDate) {
-                timeOffset = System.currentTimeMillis() - rawDate;
-                Log.d(TAG, "System: " + System.currentTimeMillis());
-                Log.d(TAG, "NTP: " + rawDate);
-                Log.d(TAG, "NTP offset: " + timeOffset);
-            }
-
-            @Override
-            public void onError(Exception ex) {
-                Log.d(SNTPClient.TAG, ex.getMessage());
-            }
-        });
 
         // Create dbHelper
         dbHelper = DBHelper.getInstance(this);
@@ -140,6 +128,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         button6 = findViewById(R.id.button_6);
         button6.setOnClickListener(this);
+    }
+
+    protected void onResume() {
+        super.onResume();
+
+        //Get ntp time and calculate offset from system time
+        SNTPClient.getDate(Calendar.getInstance().getTimeZone(), new SNTPClient.Listener() {
+            @Override
+            public void onTimeReceived(long rawDate) {
+                timeOffset = System.currentTimeMillis() - rawDate;
+                Log.d(TAG, "System time: " + System.currentTimeMillis());
+                Log.d(TAG, "NTP: " + rawDate);
+                Log.d(TAG, "NTP offset: " + timeOffset);
+            }
+
+            @Override
+            public void onError(Exception ex) {
+                Log.d(TAG, ex.getMessage());
+
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast toast = Toast.makeText(getApplicationContext(), String.format(Locale.getDefault(), "No WIFI: Using %dms time offset", timeOffset), Toast.LENGTH_LONG);
+                        toast.show();
+                    }
+                });
+            }
+        });
     }
 
     @Override
